@@ -54,12 +54,50 @@ class ChatBusinessModel {
     required this.items,
   });
 
-  factory ChatBusinessModel.fromJson(Map<String, dynamic> json) {
+  factory ChatBusinessModel.fromJson(Map<String, dynamic> json, [List<dynamic> matchesList = const []]) {
     var itemsList = json['items'] as List? ?? [];
-    List<ChatItemModel> parsedItems = itemsList.map((i) => ChatItemModel.fromJson(i)).toList();
+    String bizName = json['name'] ?? '';
+    
+    List<ChatItemModel> parsedItems = itemsList.map((i) {
+      // Intentamos enriquecer este item visual (que no trae ID) con los datos del arreglo 'matches'
+      String itemName = i['name']?.toString() ?? '';
+      String itemBiz = i['negocio']?.toString() ?? i['restaurant_name']?.toString() ?? bizName;
+      
+      Map<String, dynamic>? realMatch;
+      for (var m in matchesList) {
+        if (m is! Map<String, dynamic>) continue;
+        String mName = m['name']?.toString() ?? '';
+        String mClean = m['_clean_name']?.toString() ?? '';
+        String mBiz = m['restaurant_name']?.toString() ?? '';
+        
+        bool nameMatches = mName.toLowerCase() == itemName.toLowerCase() || 
+                           mClean.toLowerCase() == itemName.toLowerCase();
+                           
+        bool bizMatches = itemBiz.isEmpty || 
+                          itemBiz.toLowerCase() == 'top dobleu' || 
+                          itemBiz.toLowerCase() == 'opciones encontradas' ||
+                          mBiz.toLowerCase() == itemBiz.toLowerCase();
+                          
+        if (nameMatches && bizMatches) {
+          realMatch = m;
+          break;
+        }
+      }
+      
+      // Si encontramos el item en 'matches', le inyectamos los IDs a este JSON antes de parsearlo
+      if (realMatch != null) {
+        i['id'] = realMatch['id'];
+        i['restaurant_id'] = realMatch['restaurant_id'];
+        if (i['restaurant_name'] == null && i['negocio'] == null) {
+          i['restaurant_name'] = realMatch['restaurant_name'];
+        }
+      }
+      
+      return ChatItemModel.fromJson(i as Map<String, dynamic>);
+    }).toList();
     
     return ChatBusinessModel(
-      name: json['name'] ?? '',
+      name: bizName,
       abierto: json['abierto'],
       items: parsedItems,
     );
@@ -77,7 +115,7 @@ class ChatResponseModel {
   final String? ollamaIntro;
   final bool? isGlobal;
   final List<ChatBusinessModel>? businesses;
-  final String? answer; // En caso de que regrese texto plano
+  final String? answer;
 
   ChatResponseModel({
     required this.type,
@@ -94,19 +132,20 @@ class ChatResponseModel {
   });
 
   factory ChatResponseModel.fromJson(Map<String, dynamic> json) {
+    // El arreglo 'matches' es el que contiene la información completa con los IDs
+    var matchesList = json['matches'] as List? ?? [];
+
     var bizList = json['businesses'] as List?;
     List<ChatBusinessModel>? parsedBusinesses;
     if (bizList != null) {
-      parsedBusinesses = bizList.map((b) => ChatBusinessModel.fromJson(b)).toList();
+      parsedBusinesses = bizList.map((b) => ChatBusinessModel.fromJson(b, matchesList)).toList();
     } else if (json['structured'] != null && json['structured']['businesses'] != null) {
-      // Por si la respuesta anida 'businesses' dentro de 'structured'
       bizList = json['structured']['businesses'] as List?;
       if (bizList != null) {
-        parsedBusinesses = bizList.map((b) => ChatBusinessModel.fromJson(b)).toList();
+        parsedBusinesses = bizList.map((b) => ChatBusinessModel.fromJson(b, matchesList)).toList();
       }
     }
 
-    // A veces la data estructurada viene directa, a veces envuelta en 'structured'
     var root = json['structured'] ?? json;
 
     return ChatResponseModel(
