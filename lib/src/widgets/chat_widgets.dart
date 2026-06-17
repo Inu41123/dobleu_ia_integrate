@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../models/chat_response_model.dart';
+import '../pages/mock_detail_page.dart';
 
 class UserBubble extends StatelessWidget {
   final String text;
@@ -140,87 +142,118 @@ class StructuredResultCard extends StatelessWidget {
   }
 
   Widget _buildBizBlock(ChatBusinessModel biz) {
+    // Verificamos si es un restaurante real revisando si tiene un ID válido.
+    // Si la IA manda un bloque falso como "Top Dobleu", el ID suele venir vacío o 0.
+    int restId = biz.items.isNotEmpty ? biz.items.first.restaurantId : 0;
+    bool isRealRestaurant = restId != 0 && biz.name.toLowerCase() != 'top dobleu';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Biz Header
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: const BoxDecoration(
-            color: Color(0xFFFFF1E0),
-            border: Border(bottom: BorderSide(color: Color(0x1AF39200))),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 30, height: 30,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [Color(0xFFF39200), Color(0xFFFF7A00)]),
-                  borderRadius: BorderRadius.circular(9),
-                  boxShadow: const [BoxShadow(color: Color(0x40F39200), blurRadius: 6, offset: Offset(0, 2))],
-                ),
-                child: const Center(child: Text('🏪', style: TextStyle(fontSize: 13))),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(biz.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black)),
-              ),
-              if (biz.abierto != null)
+        InkWell(
+          onTap: isRealRestaurant ? () {
+            // Navegamos pasando el ID del restaurante
+            Get.to(() => MockDetailPage(
+              title: biz.name, 
+              type: 'Restaurante', 
+              id: restId
+            ), transition: Transition.rightToLeft);
+          } : null,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: const BoxDecoration(
+              color: Color(0xFFFFF1E0),
+              border: Border(bottom: BorderSide(color: Color(0x1AF39200))),
+            ),
+            child: Row(
+              children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  width: 30, height: 30,
                   decoration: BoxDecoration(
-                    color: biz.abierto! ? const Color(0xFFE9F9F0) : const Color(0xFFFFF4E3),
-                    border: Border.all(color: biz.abierto! ? const Color(0x3822A05A) : const Color(0x38F39200)),
-                    borderRadius: BorderRadius.circular(20),
+                    gradient: const LinearGradient(colors: [Color(0xFFF39200), Color(0xFFFF7A00)]),
+                    borderRadius: BorderRadius.circular(9),
+                    boxShadow: const [BoxShadow(color: Color(0x40F39200), blurRadius: 6, offset: Offset(0, 2))],
                   ),
-                  child: Text(biz.abierto! ? '🟢 Abierto' : '🔴 Cerrado', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: biz.abierto! ? const Color(0xFF1A8049) : const Color(0xFFF39200))),
+                  child: const Center(child: Text('🏪', style: TextStyle(fontSize: 13))),
                 ),
-            ],
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(biz.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black)),
+                ),
+                if (biz.abierto != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: biz.abierto! ? const Color(0xFFE9F9F0) : const Color(0xFFFFF4E3),
+                      border: Border.all(color: biz.abierto! ? const Color(0x3822A05A) : const Color(0x38F39200)),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(biz.abierto! ? '🟢 Abierto' : '🔴 Cerrado', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: biz.abierto! ? const Color(0xFF1A8049) : const Color(0xFFF39200))),
+                  ),
+              ],
+            ),
           ),
         ),
         // Items
-        ...biz.items.map((item) => _buildProductRow(item)),
+        ...biz.items.map((item) => _buildProductRow(item, biz.name)),
         const Divider(height: 1, color: Color(0x1AF39200)),
       ],
     );
   }
 
-  Widget _buildProductRow(ChatItemModel item) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            margin: const EdgeInsets.only(top: 6),
-            width: 6, height: 6,
-            decoration: const BoxDecoration(color: Color(0x80F39200), shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(item.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black87)),
-                if (item.description.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(item.description, style: const TextStyle(fontSize: 11, color: Colors.grey), maxLines: 2, overflow: TextOverflow.ellipsis),
-                  ),
-              ],
+  Widget _buildProductRow(ChatItemModel item, String parentBizName) {
+    return InkWell(
+      onTap: () {
+        // Navegamos pasando el ID del producto
+        Get.to(() => MockDetailPage(
+          title: item.name, 
+          type: 'Producto', 
+          id: item.id
+        ), transition: Transition.rightToLeft);
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 6),
+              width: 6, height: 6,
+              decoration: const BoxDecoration(color: Color(0x80F39200), shape: BoxShape.circle),
             ),
-          ),
-          const SizedBox(width: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFE9F9F0),
-              border: Border.all(color: const Color(0x3822A05A)),
-              borderRadius: BorderRadius.circular(20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(item.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black87)),
+                  if (item.description.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(item.description, style: const TextStyle(fontSize: 11, color: Colors.grey), maxLines: 2, overflow: TextOverflow.ellipsis),
+                    ),
+                  // Mostrar el restaurante de donde viene si el nombre es diferente al del bloque padre
+                  if (item.restaurantName.isNotEmpty && item.restaurantName.toLowerCase() != parentBizName.toLowerCase())
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text('📍 De: ${item.restaurantName}', style: const TextStyle(fontSize: 10, color: Color(0xFFF39200), fontWeight: FontWeight.bold)),
+                    ),
+                ],
+              ),
             ),
-            child: Text('\$${item.price.toStringAsFixed(2)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1A8049))),
-          )
-        ],
+            const SizedBox(width: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE9F9F0),
+                border: Border.all(color: const Color(0x3822A05A)),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text('\$${item.price.toStringAsFixed(2)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1A8049))),
+            )
+          ],
+        ),
       ),
     );
   }

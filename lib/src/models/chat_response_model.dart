@@ -33,11 +33,11 @@ class ChatItemModel {
     return ChatItemModel(
       id: json['id'] ?? 0,
       name: json['name'] ?? '',
-      description: json['description'] ?? '',
+      description: json['description'] ?? json['desc'] ?? '',
       price: parsedPrice,
       image1: json['image1'] ?? '',
       generalCategoryId: json['general_category_id'] ?? 0,
-      restaurantName: json['restaurant_name'] ?? '',
+      restaurantName: json['restaurant_name'] ?? json['negocio'] ?? '',
       restaurantId: json['restaurant_id'] ?? 0,
     );
   }
