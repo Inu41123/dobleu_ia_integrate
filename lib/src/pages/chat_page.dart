@@ -63,6 +63,9 @@ class ChatPage extends StatelessWidget {
                     if (msg.data != null && msg.data!.businesses != null && msg.data!.businesses!.isNotEmpty) {
                       return StructuredResultCard(data: msg.data!);
                     }
+                    if (msg.text.contains('Horario de')) {
+                      return ScheduleCard(rawText: msg.text);
+                    }
                     return BotBubble(text: msg.text);
                   }
                 },

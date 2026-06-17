@@ -255,6 +255,111 @@ class StructuredResultCard extends StatelessWidget {
           ],
         ),
       ),
+      ),
+    );
+  }
+}
+
+class ScheduleCard extends StatelessWidget {
+  final String rawText;
+  const ScheduleCard({super.key, required this.rawText});
+
+  @override
+  Widget build(BuildContext context) {
+    // Ejemplo de texto:
+    // Horario de Taquería Jessy - Cerrado ahora
+    // 
+    // Lunes: 18:00 - 22:30
+    // Martes: 18:00 - 22:30
+
+    List<String> lines = rawText.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
+    if (lines.isEmpty) return const SizedBox.shrink();
+
+    // Extraer título y estado
+    String titleLine = lines.first; // "Horario de Taquería Jessy - Cerrado ahora"
+    String restaurantName = "Horario";
+    String status = "";
+    bool isOpen = false;
+
+    if (titleLine.contains('-')) {
+      var parts = titleLine.split('-');
+      restaurantName = parts[0].replaceAll('Horario de', '').trim();
+      status = parts[1].trim();
+      isOpen = status.toLowerCase().contains('abierto');
+    } else {
+      restaurantName = titleLine.replaceAll('Horario de', '').trim();
+    }
+
+    // Extraer los días
+    List<String> scheduleLines = lines.skip(1).toList();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: const Color(0x2EF39200)),
+        borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20), bottomLeft: Radius.circular(4), bottomRight: Radius.circular(20)),
+        boxShadow: const [BoxShadow(color: Color(0x1EF39200), blurRadius: 20, offset: Offset(0, 6))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: const BoxDecoration(
+              color: Color(0xFFFFF1E0),
+              border: Border(bottom: BorderSide(color: Color(0x1AF39200))),
+              borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+            ),
+            child: Row(
+              children: [
+                const Text('⏰', style: TextStyle(fontSize: 16)),
+                const SizedBox(width: 8),
+                Expanded(child: Text(restaurantName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black))),
+                if (status.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isOpen ? const Color(0xFFE9F9F0) : Colors.white,
+                      border: Border.all(color: isOpen ? const Color(0x3822A05A) : const Color(0x38F39200)),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(status, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isOpen ? const Color(0xFF1A8049) : const Color(0xFFF39200))),
+                  ),
+              ],
+            ),
+          ),
+          
+          // Body con los días
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              children: scheduleLines.map((line) {
+                if (!line.contains(':')) return const SizedBox.shrink();
+                
+                int colonIndex = line.indexOf(':');
+                String day = line.substring(0, colonIndex).trim();
+                String time = line.substring(colonIndex + 1).trim();
+
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: const BoxDecoration(
+                    border: Border(bottom: BorderSide(color: Color(0x0AF39200))),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(day, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87)),
+                      Text(time, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1A8049))),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
