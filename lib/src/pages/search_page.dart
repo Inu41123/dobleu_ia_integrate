@@ -122,11 +122,69 @@ class _SearchPageState extends State<SearchPage> {
                         )
                       : const SizedBox.shrink(),
                 ),
+                const SizedBox(height: 24),
+                
+                // --- ELEMENTOS DE RELLENO (DUMMY) PARA MOSTRAR EL DESPLAZAMIENTO ---
+                const Text('Búsquedas Recientes', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _buildDummyChip('Hamburguesa'),
+                    _buildDummyChip('Sushi'),
+                    _buildDummyChip('Tacos al pastor'),
+                    _buildDummyChip('Pizza de pepperoni'),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                const Text('Categorías Populares', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildDummyCategory(Icons.local_pizza, 'Pizza', Colors.orange),
+                    _buildDummyCategory(Icons.fastfood, 'Burger', Colors.red),
+                    _buildDummyCategory(Icons.ramen_dining, 'Asiática', Colors.green),
+                    _buildDummyCategory(Icons.icecream, 'Postres', Colors.pink),
+                  ],
+                ),
+                const SizedBox(height: 200), // Espacio extra para asegurar scroll
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDummyChip(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Text(label, style: TextStyle(color: Colors.grey.shade700, fontSize: 13)),
+    );
+  }
+
+  Widget _buildDummyCategory(IconData icon, String title, Color color) {
+    return Column(
+      children: [
+        Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: color, size: 30),
+        ),
+        const SizedBox(height: 8),
+        Text(title, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
+      ],
     );
   }
 }
